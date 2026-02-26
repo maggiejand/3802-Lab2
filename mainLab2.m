@@ -73,32 +73,3 @@ display(P)
 
 
 
-
-
-function resultsTable = generateHeatTable(cases, T0, Hexp, Han)
-
-    T0   = T0(:);
-    Hexp = Hexp(:);
-    Han  = Han(:);
-
-    % Create table
-    resultsTable = table(cases(:), T0, Hexp, Han, ...
-        'VariableNames', {'Case', 'T0_C', 'Hexp_C_per_m', 'Han_C_per_m'});
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%% Polyfit and Graphing
-
-%[T]
