@@ -4,6 +4,7 @@ clc;
 
 %% function/equation for anilitical
 
+
 %% Import data
 
 
