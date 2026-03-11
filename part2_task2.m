@@ -8,48 +8,59 @@ cases{2} = readtable("Brass_30V_285mA");
 cases{3} = readtable("Brass_25V_237mA");
 cases{4} = readtable("Aluminum_30V_290mA");
 cases{5} = readtable("Aluminum_25V_240mA");
-cd();
+cd('..');
 
 Tests = ["Steel 22V and 203mA"; "Brass 30V and 285mA"; "Brass 25V and 237mA"; ...
          "Aluminum 30V and 290mA"; "Aluminum 25V and 240mA"];
 
-distance = [0.041275, 0.05375, 0.066675, 0.079375, 0.092075, 0.10795, 0.12065, 0.13335];
+distance = [0.034925, 0.047625, 0.060325, 0.073025, 0.085725, 0.098425, 0.111125, 0.123825];
 
 H_analytical = [544.1; 146.7; 101.7; 132.1; 91.1];
-T0           = [13.95; 15.78; 15.81; 16.98; 16.91];
-alpha        = [0; 0; 0; 0; 0];  % insert alpha values here (m^2/s)
-L            = 0;                 % insert rod length here (m)
-N_terms      = 50;
+T0           = [15.107440476190478; 16.780357142857130; 16.541666666666664;17.239880952380950; 17];
+
+alpha = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
+
+L = 0.148825;  
+N_terms = 50;
+
+exp_color = [0 0.4470 0.7410];   % MATLAB blue
+ana_color = [0.8500 0.3250 0.0980]; % MATLAB red
 
 for i = 1:5
     t = cases{i}{:,1};
 
     figure(i)
-    hold on;
-    grid on;
-    title("Model IA - " + Tests(i));
+    hold on
+    grid on
+    title("Model IA - " + Tests(i))
     xlabel("Time (s)")
     ylabel("Temperature (C)")
 
-    exp_plots = gobjects(8,1);
-    ana_plots = gobjects(8,1);
-
     for tc = 1:8
         x = distance(tc);
+        H = H_analytical(i);
 
-        T_ss = H_analytical(i) * x + T0(i);
+        series_sum = zeros(size(t));
 
-        u = zeros(size(t)); % insert Model IA u(x,t) formula here using T_ss, x, t, alpha(i), L, N_terms
+        for n = 0:N_terms
+            series_sum = series_sum + (-8*H*(-1)^n * L) .* ...
+                sin((2*n+1)*pi/(2*L) * x) .* ...
+                exp(-alpha(i)*((2*n+1)*pi/(2*L))^2 .* t) ./ ...
+                (pi^2*(2*n+1)^2);
+        end
 
-        exp_plots(tc) = plot(t, cases{i}{:, tc+1}, '-', 'LineWidth', 1.5);
-        ana_plots(tc) = plot(t, u, '--', 'Color', get(exp_plots(tc), 'Color'), 'LineWidth', 2);
+        u = T0(i) + H*x + series_sum;
+
+        % Experimental
+        plot(t, cases{i}{:,tc+1}, '-', ...
+            'Color', exp_color, 'LineWidth', 1.5)
+
+        % Analytical
+        plot(t, u, '--', ...
+            'Color', ana_color, 'LineWidth', 2)
     end
 
-    legend([exp_plots; ana_plots], ...
-        {'TC1 Exp','TC2 Exp','TC3 Exp','TC4 Exp','TC5 Exp','TC6 Exp','TC7 Exp','TC8 Exp', ...
-         'TC1 Analytical','TC2 Analytical','TC3 Analytical','TC4 Analytical', ...
-         'TC5 Analytical','TC6 Analytical','TC7 Analytical','TC8 Analytical'}, ...
-        'Location', 'best');
+    legend("Experimental","Analytical","Location","best")
 
-    hold off;
+    hold off
 end
