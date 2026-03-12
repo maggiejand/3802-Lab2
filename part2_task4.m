@@ -34,8 +34,8 @@ alpha = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
 L = 0.148825;
 
 N_terms = 10;
-ana_color = [0 0.4470 0.7410];
-exp_color = [0.8500 0.3250 0.0980];
+exp_color = [0 0.4470 0.7410];
+ana_color = [0.8500 0.3250 0.0980];
 
 for i = 1:5
 
@@ -76,7 +76,7 @@ end
             'Color', exp_color, 'LineWidth', 1.5)
 
         % Analytical solution
-        plot(t, u, '-', ...
+        plot(t, u, '-.', ...
             'Color', ana_color, 'LineWidth', 2)
 
     end
