@@ -56,7 +56,7 @@ for i = 1:5
             'Color', exp_color, 'LineWidth', 1.5)
 
         % Analytical
-        plot(t, u, '-', ...
+        plot(t, u, '-.', ...
             'Color', ana_color, 'LineWidth', 2)
     end
 
