@@ -23,8 +23,8 @@ alpha = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
 L = 0.148825;  
 N_terms = 50;
 
-ana_color = [0 0.4470 0.7410];   % MATLAB blue
-exp_color = [0.8500 0.3250 0.0980]; % MATLAB red
+exp_color = [0 0.4470 0.7410];   % MATLAB blue
+ana_color = [0.8500 0.3250 0.0980]; % MATLAB red
 
 for i = 1:5
     t = cases{i}{:,1};
