@@ -99,6 +99,7 @@ for i = 1:5
         end
 
         u = T0(i) + H*x + series_sum;
+        save{i} = u;
 
         % Experimental
         plot(t, cases{i}{:,tc+1}, '-', ...
