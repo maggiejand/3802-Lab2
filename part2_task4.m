@@ -44,7 +44,7 @@ for i = 1:5
     figure(i)
     hold on
     grid on
-    title("Model IB - " + Tests(i))
+    title("Model II - " + Tests(i))
     xlabel("Time (s)")
     ylabel("Temperature (C)")
 
