@@ -57,8 +57,12 @@ for i = 1:5
 
             u = T0(i) + H*x + series_sum;
             exp_data = cases{i}{:,tc+1};
-
-            total_error = total_error + sum((exp_data - u).^2);
+            if i == 5
+                exp_data = cases{i}{1:342,tc+1};
+                total_error = total_error + sum((exp_data - u(1:342)).^2);
+            else
+                total_error = total_error + sum((exp_data - u).^2);
+            end
             count = count + length(t);
         end
 
