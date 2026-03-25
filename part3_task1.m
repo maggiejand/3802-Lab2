@@ -21,6 +21,7 @@ H_analytical = [286.6; 150.5; 105.6; 79.2; 55.4];
 T0 = [15.1074; 16.7804; 16.5417; 17.2399; 17];
 
 alpha = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
+alpha_bests = zeros(5,1);
 
 L = 0.148825;  
 N_terms = 10;
@@ -67,11 +68,11 @@ for i = 1:5
     %Best alpha
     [~, idx] = min(rms_vals);
     alpha_best = alpha(i) * scale(idx);
-
+    alpha_bests(i) = alpha_best;
     fprintf("Test %d Best alpha = %.4e\n", i, alpha_best);
 
     % Plot RMS vs alpha 
-    figure;
+    figure(2*i-1);
     plot(alpha(i)*scale, rms_vals, 'LineWidth', 2)
     grid on
     xlabel('\alpha')
@@ -79,7 +80,7 @@ for i = 1:5
     title("RMS vs Alpha - " + Tests(i))
 
     %  Final Model III Plot
-    figure;
+    figure(2*i);
     hold on
     grid on
     title("Model III - " + Tests(i))
@@ -113,3 +114,58 @@ for i = 1:5
     legend("Experimental","Model III","Location","best")
     hold off
 end
+
+%% Part 3 Task 2
+% for i=1:5
+% maxT(i) = max(save(i))
+% end
+% Compute max of each case stored in save (cell array)
+numCases = numel(save);
+maxVals = nan(1,numCases);
+for k = 1:numCases
+    vec = save{k};
+    if isnumeric(vec) && ~isempty(vec)
+        maxVals(k) = max(vec(:));
+    end
+end
+
+% Find length of each vector in save cell
+numCases = numel(save);
+lengths = zeros(1,numCases);
+for k = 1:numCases
+    vec = save{k};
+    if isnumeric(vec) && ~isempty(vec)
+        lengths(k) = numel(vec);
+    else
+        lengths(k) = 0;
+    end
+end
+steadystate = 0.99;
+tss = zeros(5,1);
+
+for i=1:length(lengths)
+    vector = save{i};
+    for j=1:length(vector)
+        if vector(j)>= maxVals(i)*steadystate
+            tss(i) = j*10
+            %fprintf("tss found")
+            break;   
+           
+        end
+    end
+end
+% For showing where the Steady state time is on the graph
+ % for i=1:length(lengths)
+ %     figure(2*i);
+ %     xline(tss(i))
+ % end
+
+% F0 = (alpha*tss)/distance(8)
+
+for i=1:length(lengths)
+    F0(i) = (alpha_bests(i) * tss(i)) / (distance(end)^2)
+end
+
+
+
+
