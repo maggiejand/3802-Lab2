@@ -1,0 +1,187 @@
+clear; 
+clc;
+close all;
+
+cd("ASEN3802_HeatConduction_FA25\")
+cases{1} = readtable("Steel_22V_203mA");
+cases{2} = readtable("Brass_30V_285mA");
+cases{3} = readtable("Brass_25V_237mA");
+cases{4} = readtable("Aluminum_30V_290mA");
+cases{5} = readtable("Aluminum_25V_240mA");
+cd('..');
+
+Tests = ["Steel 22V and 203mA"; "Brass 30V and 285mA"; ...
+         "Brass 25V and 237mA"; "Aluminum 30V and 290mA"; ...
+         "Aluminum 25V and 240mA"];
+
+distance = [0.034925, 0.047625, 0.060325, 0.073025, ...
+            0.085725, 0.098425, 0.111125, 0.123825];
+
+H_analytical = [286.6; 150.5; 105.6; 79.2; 55.4];
+T0 = [15.1074; 16.7804; 16.5417; 17.2399; 17];
+
+alpha = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
+alpha_bests = zeros(5,1);
+
+L = 0.148825;  
+N_terms = 10;
+
+ana_color = [0 0.4470 0.7410];
+exp_color = [0.8500 0.3250 0.0980];
+ana_color2 = [0.9290, 0.6940, 0.1250];
+ana_color3 = [0.4940, 0.1840, 0.5560];
+ana_color4 = [0.4660, 0.6740, 0.1880];
+
+for i = 1:5
+    t = cases{i}{:,1};
+    H = H_analytical(i);
+
+    % ---- Sweep alpha ----
+    scale = linspace(0.5, 1.5, 40);
+    rms_vals = zeros(size(scale));
+
+    for s = 1:length(scale)
+        alpha_test = alpha(i) * scale(s);
+
+        total_error = 0;
+        count = 0;
+
+        for tc = 8
+            x = distance(tc);
+
+            series_sum = zeros(size(t));
+
+            for n = 0:N_terms
+                series_sum = series_sum + (-8*H*(-1)^n * L) .* ...
+                    sin((2*n+1)*pi/(2*L) * x) .* ...
+                    exp(-alpha_test*((2*n+1)*pi/(2*L))^2 .* t) ./ ...
+                    (pi^2*(2*n+1)^2);
+            end
+
+            u = T0(i) + H*x + series_sum;
+            exp_data = cases{i}{:,tc+1};
+            if i == 5
+                exp_data = cases{i}{1:342,tc+1};
+                total_error = total_error + sum((exp_data - u(1:342)).^2);
+            else
+                total_error = total_error + sum((exp_data - u).^2);
+            end
+            count = count + length(t);
+        end
+
+        rms_vals(s) = sqrt(total_error / count);
+    end
+
+    %Best alpha
+    [~, idx] = min(rms_vals);
+    alpha_best = alpha(i) * scale(idx);
+    alpha_bests(i) = alpha_best;
+    fprintf("Test %d Best alpha = %.4e\n", i, alpha_best);
+
+    %  Final Model III Plot
+    figure(2*i);
+    hold on
+    grid on
+    title("Model III - " + Tests(i))
+    xlabel("Time (s)")
+    ylabel("Temperature (C)")
+
+    for tc = 8
+        x = distance(tc);
+
+        series_sum = zeros(size(t));
+
+        for n = 0:N_terms
+            series_sum = series_sum + (-8*H*(-1)^n * L) .* ...
+                sin((2*n+1)*pi/(2*L) * x) .* ...
+                exp(-alpha_best*((2*n+1)*pi/(2*L))^2 .* t) ./ ...
+                (pi^2*(2*n+1)^2);
+        end
+
+        u = T0(i) + H*x + series_sum;
+        save{i} = u;
+        
+        ua = T0(i) + H*x + series_sum;
+        savea{i} = u;
+
+        ub = T0(i) + H*x + series_sum;
+        saveb{i} = u;
+
+        u2 = T0(i) + H*x + series_sum;
+        save2{i} = u;
+
+        % Experimental
+        plot(t, cases{i}{:,tc+1}, '-', ...
+            'Color', exp_color, 'LineWidth', 1.2)
+
+         % Model 1A
+        plot(t, ua, '--', ...
+            'Color', ana_color2, 'LineWidth', 2)
+
+         % Model 1B
+        plot(t, ub, '--', ...
+            'Color', ana_color3, 'LineWidth', 2)
+
+         % Model II
+        plot(t, u2, '--', ...
+            'Color', ana_color4, 'LineWidth', 2)
+
+        % Model III
+        plot(t, u, '--', ...
+            'Color', ana_color, 'LineWidth', 2)
+    end
+
+    legend("Experimental","Model 1A","Model 1B","Model II","Model III","Location","best")
+    hold off
+end
+
+%% Part 3 Task 2
+% for i=1:5
+% maxT(i) = max(save(i))
+% end
+% Compute max of each case stored in save (cell array)
+numCases = numel(save);
+maxVals = nan(1,numCases);
+for k = 1:numCases
+    vec = save{k};
+    if isnumeric(vec) && ~isempty(vec)
+        maxVals(k) = max(vec(:));
+    end
+end
+
+% Find length of each vector in save cell
+numCases = numel(save);
+lengths = zeros(1,numCases);
+for k = 1:numCases
+    vec = save{k};
+    if isnumeric(vec) && ~isempty(vec)
+        lengths(k) = numel(vec);
+    else
+        lengths(k) = 0;
+    end
+end
+steadystate = 0.99;
+tss = zeros(5,1);
+
+for i=1:length(lengths)
+    vector = save{i};
+    for j=1:length(vector)
+        if vector(j)>= maxVals(i)*steadystate
+            tss(i) = j*10
+            %fprintf("tss found")
+            break;   
+           
+        end
+    end
+end
+% For showing where the Steady state time is on the graph
+ % for i=1:length(lengths)
+ %     figure(2*i);
+ %     xline(tss(i))
+ % end
+
+% F0 = (alpha*tss)/distance(8)
+
+for i=1:length(lengths)
+    F0(i) = (alpha_bests(i) * tss(i)) / (distance(end)^2)
+end
