@@ -20,11 +20,31 @@ distance = [0.034925, 0.047625, 0.060325, 0.073025, ...
 H_analytical = [286.6; 150.5; 105.6; 79.2; 55.4];
 T0 = [15.1074; 16.7804; 16.5417; 17.2399; 17];
 
+H_analyticala = [544.1; 146.7; 101.7; 132.1; 91.1];
+T0a           = [15.107440476190478; 16.780357142857130; 16.541666666666664;17.239880952380950; 17];
+alphaa = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
+
+
+H_analyticalb = [286.6; 150.5; 105.6; 79.2; 55.4];
+T0b           = [15.107440476190478; 16.780357142857130; 16.541666666666664;17.239880952380950; 17];
+alphab = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
+
+H_analytical2 = [286.6; 150.5; 105.6; 79.2; 55.4];
+T02 = [15.107440476190478;
+      16.780357142857130;
+      16.541666666666664;
+      17.239880952380950;
+      17];
+alpha2 = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
+ M_exp= [18.4664; 4.8774; 4.312; 0.0937; 0.4687];
+
+
 alpha = [4.050e-6; 3.563e-5; 3.563e-5; 4.819e-5; 4.819e-5];
 alpha_bests = zeros(5,1);
 
 L = 0.148825;  
 N_terms = 10;
+N_termsab = 50;
 
 ana_color = [0 0.4470 0.7410];
 exp_color = [0.8500 0.3250 0.0980];
@@ -86,10 +106,47 @@ for i = 1:5
     xlabel("Time (s)")
     ylabel("Temperature (C)")
 
+    M = M_exp(i);
+
     for tc = 8
         x = distance(tc);
-
         series_sum = zeros(size(t));
+           
+        Ha = H_analyticala(i);
+        series_suma = zeros(size(t));
+
+        Hb = H_analyticalb(i);
+        series_sumb = zeros(size(t));
+
+        H2 = H_analytical2(i);
+        series_sum2 = zeros(size(t));
+        
+        for n = 0:N_termsab
+            series_suma = series_suma + (-8*Ha*(-1)^n * L) .* ...
+                sin((2*n+1)*pi/(2*L) * x) .* ...
+                exp(-alpha(i)*((2*n+1)*pi/(2*L))^2 .* t) ./ ...
+                (pi^2*(2*n+1)^2);
+        end
+
+        for n = 0:N_termsab
+            series_sumb = series_sumb + (-8*Hb*(-1)^n * L) .* ...
+                sin((2*n+1)*pi/(2*L) * x) .* ...
+                exp(-alpha(i)*((2*n+1)*pi/(2*L))^2 .* t) ./ ...
+                (pi^2*(2*n+1)^2);
+        end
+
+        series_sum2 = zeros(size(t));
+
+        for n = 0:N_terms
+
+    lambda = (2*n+1)*pi/(2*L);
+
+    bn = 8*L*(M-H2)*(-1)^n / (pi^2*(2*n+1)^2);
+
+    series_sum2 = series_sum2 + ...
+        bn .* sin(lambda*x) .* ...
+        exp(-alpha(i)*lambda^2 .* t);
+        end
 
         for n = 0:N_terms
             series_sum = series_sum + (-8*H*(-1)^n * L) .* ...
@@ -99,18 +156,15 @@ for i = 1:5
         end
 
         u = T0(i) + H*x + series_sum;
-        save{i} = u;
         
-        ua = T0(i) + H*x + series_sum;
-        savea{i} = u;
+        ua = T0a(i) + Ha*x + series_suma;
 
-        ub = T0(i) + H*x + series_sum;
-        saveb{i} = u;
+        ub = T0b(i) + Hb*x + series_sumb;
 
-        u2 = T0(i) + H*x + series_sum;
-        save2{i} = u;
+        u2 = T02(i) + H2*x + series_sum2;
 
         % Experimental
+        %ADD ERROR BARS
         plot(t, cases{i}{:,tc+1}, '-', ...
             'Color', exp_color, 'LineWidth', 1.2)
 
@@ -133,55 +187,4 @@ for i = 1:5
 
     legend("Experimental","Model 1A","Model 1B","Model II","Model III","Location","best")
     hold off
-end
-
-%% Part 3 Task 2
-% for i=1:5
-% maxT(i) = max(save(i))
-% end
-% Compute max of each case stored in save (cell array)
-numCases = numel(save);
-maxVals = nan(1,numCases);
-for k = 1:numCases
-    vec = save{k};
-    if isnumeric(vec) && ~isempty(vec)
-        maxVals(k) = max(vec(:));
-    end
-end
-
-% Find length of each vector in save cell
-numCases = numel(save);
-lengths = zeros(1,numCases);
-for k = 1:numCases
-    vec = save{k};
-    if isnumeric(vec) && ~isempty(vec)
-        lengths(k) = numel(vec);
-    else
-        lengths(k) = 0;
-    end
-end
-steadystate = 0.99;
-tss = zeros(5,1);
-
-for i=1:length(lengths)
-    vector = save{i};
-    for j=1:length(vector)
-        if vector(j)>= maxVals(i)*steadystate
-            tss(i) = j*10
-            %fprintf("tss found")
-            break;   
-           
-        end
-    end
-end
-% For showing where the Steady state time is on the graph
- % for i=1:length(lengths)
- %     figure(2*i);
- %     xline(tss(i))
- % end
-
-% F0 = (alpha*tss)/distance(8)
-
-for i=1:length(lengths)
-    F0(i) = (alpha_bests(i) * tss(i)) / (distance(end)^2)
 end
